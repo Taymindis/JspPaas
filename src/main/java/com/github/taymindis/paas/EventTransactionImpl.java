@@ -227,9 +227,13 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
             return;
         }
         if(committable) {
-            this.commit();
+            try {
+                this.commit();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
-        getConnection().close();
+        this.connection.close();
         this.hasReleased = true;
     }
 

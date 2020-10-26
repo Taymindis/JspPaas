@@ -41,4 +41,7 @@ public class QueryResult  {
         return ++index < this.size;
     }
 
+    public int getSize() {
+        return size;
+    }
 }

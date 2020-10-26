@@ -222,6 +222,12 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
         release(true);
     }
 
+    public void close() throws SQLException {
+        if (connection != null) {
+            this.connection.close();
+        }
+    }
+
     public void release(boolean committable) throws SQLException {
         if(this.hasReleased) {
             return;
@@ -233,7 +239,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
                 throwables.printStackTrace();
             }
         }
-        this.connection.close();
+        this.close();
         this.hasReleased = true;
     }
 

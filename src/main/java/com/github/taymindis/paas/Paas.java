@@ -400,6 +400,11 @@ public abstract class Paas implements Event {
         return sb.toString();
     }
 
+//    private static String getRequestBody(HttpServletRequest req) throws IOException {
+//        java.util.Scanner s = new java.util.Scanner(req.getInputStream(), "UTF-8").useDelimiter("\\A");
+//        return s.hasNext() ? s.next() : "";
+//    }
+
     private static void marshallingParam(PageContext pc, Object pageObj,/* Object _prevObj, */Event ev, boolean finalizing) {
         Class<?> clazz = pageObj.getClass();
         String name = clazz.getCanonicalName();

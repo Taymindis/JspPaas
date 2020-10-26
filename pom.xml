@@ -6,10 +6,10 @@
 
     <groupId>com.github.taymindis</groupId>
     <artifactId>jsp-paas</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>jsp-paas</name>
     <description>
-       Page as a service for JSP to standardize the function by jsp page, guarantee zero downtime
+        Page as a service for JSP to standardize the function by jsp page, guarantee zero downtime
     </description>
     <properties>
         <maven.compiler.source>1.7</maven.compiler.source>
@@ -151,24 +151,29 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
-
-<!--                <configuration>-->
-
-<!--                    &lt;!&ndash;  you can Adding processor at file below also-->
-<!--                     META-INF/services/javax.annotation.processing.Processor-->
-<!--                     &ndash;&gt;-->
-<!--                    <annotationProcessors>-->
-<!--                        <annotationProcessor>-->
-<!--                            com.github.taymindis.test.SetterProcessor-->
-<!--                        </annotationProcessor>-->
-<!--                    </annotationProcessors>-->
-<!--                    <proc>none</proc>-->
-<!--                    <includes>-->
-<!--                        <include>com/github/taymindis/test/SetterProcessor.java</include>-->
-<!--                    </includes>-->
-<!--                    <source>1.7</source>-->
-<!--                    <target>1.7</target>-->
-<!--                </configuration>-->
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <includes>
+                                <include>com/github/taymindis/paas/MethodHookProcessor.java</include>
+                                <!--include dependencies required for MethodHookProcessor -->
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-project</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- override version of GPG plugin to use new GPG signing features -->
             <plugin>
@@ -189,24 +194,24 @@
                 <version>2.22.0</version>
             </plugin>
 
-<!--            <plugin>-->
-<!--                <artifactId>maven-assembly-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>single</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--                <configuration>-->
-<!--                    <descriptorRefs>-->
-<!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
-<!--                    </descriptorRefs>-->
-<!--                    <finalName>${project.artifactId}-bundle-${project.version}</finalName>-->
-<!--                    <appendAssemblyId>false</appendAssemblyId>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                <artifactId>maven-assembly-plugin</artifactId>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <phase>package</phase>-->
+            <!--                        <goals>-->
+            <!--                            <goal>single</goal>-->
+            <!--                        </goals>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--                <configuration>-->
+            <!--                    <descriptorRefs>-->
+            <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+            <!--                    </descriptorRefs>-->
+            <!--                    <finalName>${project.artifactId}-bundle-${project.version}</finalName>-->
+            <!--                    <appendAssemblyId>false</appendAssemblyId>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
         </plugins>
     </build>
 

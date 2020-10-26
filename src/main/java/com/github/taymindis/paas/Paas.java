@@ -15,6 +15,7 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -322,8 +323,8 @@ public abstract class Paas implements Event {
     }
 
     @Override
-    public JspWriter getOut() {
-        return this._pageContext.getOut();
+    public PrintWriter getWriter() throws IOException {
+        return this._pageContext.getResponse().getWriter();
     }
 
     @Override
@@ -418,6 +419,9 @@ public abstract class Paas implements Event {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method m : methods) {
                 if (m.isAnnotationPresent(hook.class)) {
+//                    if(!isQualifyMethod(m)){
+//                      // TODO if not qualify, throw e
+//                    }
                     m.setAccessible(true);
                     mprms.setM(m);
                     mprms.setParamAnnotation(m.getParameterAnnotations());

@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
 public interface Event {
@@ -64,6 +66,6 @@ public interface Event {
    HttpServletRequest getServletRequest();
    HttpServletResponse getServletResponse();
    HttpSession getSession();
-   JspWriter getOut();
+   PrintWriter getWriter() throws IOException;
    PageContext getPageContext();
 }

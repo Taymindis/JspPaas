@@ -158,7 +158,7 @@
                 <executions>
                     <execution>
                         <id>default-compile</id>
-                        <phase>validate</phase>
+                        <phase>process-resources</phase>
                         <configuration>
                             <includes>
                                 <include>com/github/taymindis/paas/MethodHookProcessor.java</include>

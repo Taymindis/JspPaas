@@ -140,7 +140,7 @@ public abstract class Paas implements Event {
             }
             marshallingParam(pc, pc.getPage(), ev, true);
         } catch (NamingException e) {
-            logger.log(e.getExplanation());
+            e.printStackTrace();
         }
     }
 

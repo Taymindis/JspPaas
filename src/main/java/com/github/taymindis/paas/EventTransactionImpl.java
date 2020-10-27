@@ -151,6 +151,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
                 rs = stmt.getGeneratedKeys();
             } else {
                 stmt = this.createStatement();
+                stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
                 rs = stmt.getGeneratedKeys();
             }
             rowAffectedOrKey = rs.next() ? rs.getInt(1) : -1;

@@ -422,6 +422,7 @@ public abstract class Paas implements Event {
         }
         if (rebuild) {
             Method[] methods = clazz.getDeclaredMethods();
+            boolean hasMethod = false;
             for (Method m : methods) {
                 if (m.isAnnotationPresent(hook.class)) {
 //                    if(!isQualifyMethod(m)){
@@ -430,9 +431,15 @@ public abstract class Paas implements Event {
                     m.setAccessible(true);
                     mprms.setM(m);
                     mprms.setParamAnnotation(m.getParameterAnnotations());
+                    hasMethod = true;
                     break;
                 }
             }
+
+            if(!hasMethod) {
+                return;
+            }
+
             // find the first param will do
             paramAnnotation = mprms.getParamAnnotation();
             cacheMethodParams.put(name, mprms);

@@ -38,11 +38,11 @@ import java.util.concurrent.TimeUnit;
 //    maxIdle="20"
 //    minIdle="5"
 //    maxWait="10000"/>
-public class EventTransactionImpl extends Paas implements EventTransaction {
+public class JtaEventImpl extends Paas implements JtaEvent {
     private Object result;
     private Connection connection = null;
     private DataSource _ds;
-    private EventTransactionLogger logger;
+    private JtaEventLogger logger;
 //    private static final EventTransactionLogger defaultLog;
     //    private Savepoint _sp = null;
     private static final ConcurrentHashMap<String, DataSource> dsMaps = new ConcurrentHashMap<>();
@@ -66,7 +66,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
      * @throws IOException      IOException
      * @throws ServletException ServletException
      */
-    public EventTransactionImpl dispatch(String jspPath) throws ServletException, IOException {
+    public JtaEventImpl dispatch(String jspPath) throws ServletException, IOException {
         clearPreviousStatus();
         this._pageContext.include(resourcePath + jspPath.replace(splitter, "/") + suffix);
 
@@ -423,7 +423,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
 
     }
 
-    private void init(PageContext pc, String jndiResource, EventTransactionLogger logger) throws NamingException {
+    private void init(PageContext pc, String jndiResource, JtaEventLogger logger) throws NamingException {
         this.result = null;
         this.logger = logger;
 
@@ -455,7 +455,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
         }
     }
 
-    protected EventTransactionImpl(PageContext pc, String jndiResource, EventTransactionLogger log) throws NamingException {
+    protected JtaEventImpl(PageContext pc, String jndiResource, JtaEventLogger log) throws NamingException {
         super(pc);
         init(pc, jndiResource, log);
     }

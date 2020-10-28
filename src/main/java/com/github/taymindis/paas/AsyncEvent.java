@@ -9,11 +9,11 @@ import java.util.concurrent.*;
 /**
  * dispatching async between web container
  */
-public class EventFuture extends Paas implements Event {
+public class AsyncEvent extends Paas implements Event {
     private Future<Void> f;
     private Object result;
 
-    protected EventFuture(PageContext pc) {
+    protected AsyncEvent(PageContext pc) {
         super(pc);
         this.f = null;
         this.result = null;
@@ -29,7 +29,7 @@ public class EventFuture extends Paas implements Event {
      * @throws ServletException ServletException
      */
     @Override
-    public synchronized EventFuture dispatch(final String jspPath) throws Exception {
+    public synchronized AsyncEvent dispatch(final String jspPath) throws Exception {
         if (isDispatchFutureEnabled()) {
             throw new Exception("Background Task feature is not enabled");
         }
@@ -38,7 +38,7 @@ public class EventFuture extends Paas implements Event {
         }
         clearPreviousStatus();
         final PageContext $pc = this._pageContext;
-        final EventFuture df = this;
+        final AsyncEvent df = this;
         f = getBgExecutor().submit(new Callable<Void>() {
             @Override
             public Void call() throws Exception {

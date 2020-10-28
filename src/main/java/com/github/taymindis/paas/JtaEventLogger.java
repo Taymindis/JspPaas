@@ -1,6 +1,6 @@
 package com.github.taymindis.paas;
 
-public interface EventTransactionLogger  {
+public interface JtaEventLogger {
 
     void log(String sql, Object... args);
 

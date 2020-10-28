@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * dispatching in between web container
  */
-public class EventSync extends Paas implements Event {
+public class SyncEvent extends Paas implements Event {
     //    private HttpServletResponse response;
     private Object result;
 
-    protected EventSync(PageContext pc) {
+    protected SyncEvent(PageContext pc) {
         super(pc);
         this.result = null;
     }
@@ -27,7 +27,7 @@ public class EventSync extends Paas implements Event {
      * @throws ServletException ServletException
      */
     @Override
-    public EventSync dispatch(String jspPath) throws ServletException, IOException {
+    public SyncEvent dispatch(String jspPath) throws ServletException, IOException {
         clearPreviousStatus();
         this._pageContext.include(resourcePath + jspPath.replace(splitter, "/") + suffix);
         return this;

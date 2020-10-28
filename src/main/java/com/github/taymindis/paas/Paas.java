@@ -48,13 +48,13 @@ public abstract class Paas implements Event {
     }
 
     private static Event newEvent(PageContext pc) {
-        Event ev = new EventSync(pc);
+        Event ev = new SyncEvent(pc);
         pc.setAttribute("$_ev_ctx", ev, PageContext.REQUEST_SCOPE);
         return ev;
     }
 
     private static Event newFutureEvent(PageContext pc) {
-        Event ev = new EventFuture(pc);
+        Event ev = new AsyncEvent(pc);
         pc.setAttribute("$_ev_ctx", ev, PageContext.REQUEST_SCOPE);
         return ev;
     }
@@ -63,8 +63,8 @@ public abstract class Paas implements Event {
 //        return newTransactionEvent(pc, jndiResource, null);
 //    }
 
-    private static EventTransaction newTransactionEvent(PageContext pc, String jndiResource, EventTransactionLogger log) throws NamingException {
-        EventTransaction ev = new EventTransactionImpl(pc, jndiResource, log);
+    private static JtaEvent newTransactionEvent(PageContext pc, String jndiResource, JtaEventLogger log) throws NamingException {
+        JtaEvent ev = new JtaEventImpl(pc, jndiResource, log);
         pc.setAttribute("$_ev_ctx", ev, PageContext.REQUEST_SCOPE);
 //        marshallingArgs(pc.getPage(), ev);
         return ev;
@@ -107,30 +107,30 @@ public abstract class Paas implements Event {
         serveJta(pc, jndiResource, false, DEFAULT_ROLLBACK_ON_ERROR);
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final EventTransactionLogger logger) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final JtaEventLogger logger) {
         serveJta(pc, jndiResource, false, logger, DEFAULT_ROLLBACK_ON_ERROR);
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final EventTransactionLogger logger, final boolean rollbackOnError) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final JtaEventLogger logger, final boolean rollbackOnError) {
         serveJta(pc, jndiResource, false, logger, rollbackOnError);
     }
 
     public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload) {
-        serveJta(pc, jndiResource, hasJsonPayload, new DefaultTransactionLogger(), DEFAULT_ROLLBACK_ON_ERROR);
+        serveJta(pc, jndiResource, hasJsonPayload, new DefaultJtaEventLogger(), DEFAULT_ROLLBACK_ON_ERROR);
     }
 
     public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final boolean rollbackOnError) {
-        serveJta(pc, jndiResource, hasJsonPayload, new DefaultTransactionLogger(), rollbackOnError);
+        serveJta(pc, jndiResource, hasJsonPayload, new DefaultJtaEventLogger(), rollbackOnError);
     }
-    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final EventTransactionLogger logger){
+    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final JtaEventLogger logger){
         serveJta(pc, jndiResource, hasJsonPayload, logger, DEFAULT_ROLLBACK_ON_ERROR);
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final EventTransactionLogger logger) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final JtaEventLogger logger) {
         serveJta(pc, jndiResource, jsonPayload, logger, DEFAULT_ROLLBACK_ON_ERROR);
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final EventTransactionLogger logger, final boolean rollbackOnError) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final JtaEventLogger logger, final boolean rollbackOnError) {
         if (hasJsonPayload) {
             JSONObject jsonPayload = null;
             try {
@@ -147,9 +147,9 @@ public abstract class Paas implements Event {
         }
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final EventTransactionLogger logger, final boolean rollbackOnError) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final JtaEventLogger logger, final boolean rollbackOnError) {
         try {
-            EventTransaction ev = newTransactionEvent(pc, jndiResource, logger);
+            JtaEvent ev = newTransactionEvent(pc, jndiResource, logger);
             if (jsonPayload != null) {
                 ev.setJsonBody(jsonPayload);
             }
@@ -574,8 +574,8 @@ public abstract class Paas implements Event {
             }
         } finally {
             if (finalizing) {
-                if (ev instanceof EventTransaction) {
-                    EventTransaction evt = (EventTransaction) ev;
+                if (ev instanceof JtaEvent) {
+                    JtaEvent evt = (JtaEvent) ev;
                     try {
                         if (hasError && evt.isRollbackOnError()) {
                             try {

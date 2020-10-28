@@ -157,22 +157,35 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>default-compile</id>
-                        <phase>process-resources</phase>
+                        <id>process-test-annotations</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
                         <configuration>
-                            <includes>
-                                <include>com/github/taymindis/paas/MethodHookProcessor.java</include>
-                                <!--include dependencies required for MethodHookProcessor -->
-                            </includes>
+                            <proc>only</proc>
+                            <annotationProcessors>
+                                <annotationProcessor>com.github.taymindis.paas.MethodHookProcessor</annotationProcessor>
+                            </annotationProcessors>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>compile-project</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>default-compile</id>-->
+<!--                        <phase>process-resources</phase>-->
+<!--                        <configuration>-->
+<!--                            <includes>-->
+<!--                                <include>com/github/taymindis/paas/MethodHookProcessor.java</include>-->
+<!--                                &lt;!&ndash;include dependencies required for MethodHookProcessor &ndash;&gt;-->
+<!--                            </includes>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>compile-project</id>-->
+<!--                        <phase>compile</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>compile</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
                 </executions>
             </plugin>
             <!-- override version of GPG plugin to use new GPG signing features -->

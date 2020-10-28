@@ -1,13 +1,14 @@
 package com.github.taymindis.paas;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 public class MethodParams {
    private String className;
    private int hashCode;
    private Method m;
-   private Annotation[][] paramAnnotation;
+   private ArgHandler[] argsHandlers;
+
+
 //   private Class<?>[] parameterTypes;
 
     public MethodParams(String className, int hashCode) {
@@ -39,12 +40,11 @@ public class MethodParams {
         this.hashCode = hashCode;
     }
 
-    public Annotation[][] getParamAnnotation() {
-        return paramAnnotation;
+    public ArgHandler[] getArgsHandlers() {
+        return argsHandlers;
     }
 
-    public void setParamAnnotation(Annotation[][] paramAnnotation) {
-        this.paramAnnotation = paramAnnotation;
+    public void setArgsHandlers(ArgHandler[] argsHandlers) {
+        this.argsHandlers = argsHandlers;
     }
-
 }

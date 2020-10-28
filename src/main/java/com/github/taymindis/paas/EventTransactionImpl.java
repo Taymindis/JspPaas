@@ -47,6 +47,7 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
     //    private Savepoint _sp = null;
     private static final ConcurrentHashMap<String, DataSource> dsMaps = new ConcurrentHashMap<>();
     private boolean hasReleased;
+    private boolean rollbackOnError;
 
 //    static {
 //        defaultLog = new EventTransactionLogger() {
@@ -242,6 +243,16 @@ public class EventTransactionImpl extends Paas implements EventTransaction {
         }
         this.close();
         this.hasReleased = true;
+    }
+
+    @Override
+    public boolean isRollbackOnError() {
+        return rollbackOnError;
+    }
+
+    @Override
+    public void setRollbackOnError(boolean rollbackOnError) {
+        this.rollbackOnError = rollbackOnError;
     }
 
     private Connection getConnection() throws SQLException {

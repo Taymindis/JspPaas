@@ -38,6 +38,10 @@ public interface EventTransaction extends Event {
 
     void release(boolean committable) throws SQLException;
 
+    boolean isRollbackOnError();
+
+    void setRollbackOnError(boolean rollbackOnError);
+
     @Override
     <T extends Object> T  getResult();
 

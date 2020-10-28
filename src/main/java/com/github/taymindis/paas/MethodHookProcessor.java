@@ -18,6 +18,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
+/** For testing only, please ignore in production **/
 @SupportedAnnotationTypes({"com.github.taymindis.paas.annotation.hook"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class MethodHookProcessor extends AbstractProcessor {
@@ -51,10 +52,10 @@ public class MethodHookProcessor extends AbstractProcessor {
             printError(method, "character following \"stub\" must be upper case");
         }
 
-//        // cannot be public
-//        if (method.getModifiers().contains(Modifier.PUBLIC)) {
-//            printError(method, "method must not be public");
-//        }
+        // must be privatec
+        if (!method.getModifiers().contains(Modifier.PRIVATE)) {
+            printError(method, "method must be private only");
+        }
 
         // check, if method is static
         if (method.getModifiers().contains(Modifier.STATIC)) {

@@ -34,7 +34,6 @@ public abstract class Paas implements Event {
     private EventStatus evStatus; // this is event process result status
     private String statusMessage;
     private JSONObject jsonPayload;
-    private static final boolean DEFAULT_ROLLBACK_ON_ERROR = true;
 
     //    private static final Map<String, MethodParams> cacheArgFields = new HashMap<>();
     private static final Map<String, MethodParams> cacheMethodParams = new HashMap<>();
@@ -103,34 +102,16 @@ public abstract class Paas implements Event {
         marshallingParam(pc, pc.getPage(), ev, true);
     }
 
+
     public static void serveJta(final PageContext pc, final String jndiResource) {
-        serveJta(pc, jndiResource, false, DEFAULT_ROLLBACK_ON_ERROR);
-    }
-
-    public static void serveJta(final PageContext pc, final String jndiResource, final EventTransactionLogger logger) {
-        serveJta(pc, jndiResource, false, logger, DEFAULT_ROLLBACK_ON_ERROR);
-    }
-
-    public static void serveJta(final PageContext pc, final String jndiResource, final EventTransactionLogger logger, final boolean rollbackOnError) {
-        serveJta(pc, jndiResource, false, logger, rollbackOnError);
+        serveJta(pc, jndiResource, false);
     }
 
     public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload) {
-        serveJta(pc, jndiResource, hasJsonPayload, new DefaultTransactionLogger(), DEFAULT_ROLLBACK_ON_ERROR);
+        serveJta(pc, jndiResource, hasJsonPayload, new DefaultTransactionLogger());
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final boolean rollbackOnError) {
-        serveJta(pc, jndiResource, hasJsonPayload, new DefaultTransactionLogger(), rollbackOnError);
-    }
-    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final EventTransactionLogger logger){
-        serveJta(pc, jndiResource, hasJsonPayload, logger, DEFAULT_ROLLBACK_ON_ERROR);
-    }
-
-    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final EventTransactionLogger logger) {
-        serveJta(pc, jndiResource, jsonPayload, logger, DEFAULT_ROLLBACK_ON_ERROR);
-    }
-
-    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final EventTransactionLogger logger, final boolean rollbackOnError) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final boolean hasJsonPayload, final EventTransactionLogger logger) {
         if (hasJsonPayload) {
             JSONObject jsonPayload = null;
             try {
@@ -141,19 +122,18 @@ public abstract class Paas implements Event {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            serveJta(pc, jndiResource, jsonPayload, logger, rollbackOnError);
+            serveJta(pc, jndiResource, jsonPayload, logger);
         } else {
-            serveJta(pc, jndiResource, null, logger, rollbackOnError);
+            serveJta(pc, jndiResource, null, logger);
         }
     }
 
-    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final EventTransactionLogger logger, final boolean rollbackOnError) {
+    public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final EventTransactionLogger logger) {
         try {
             EventTransaction ev = newTransactionEvent(pc, jndiResource, logger);
             if (jsonPayload != null) {
                 ev.setJsonBody(jsonPayload);
             }
-            ev.setRollbackOnError(rollbackOnError);
             marshallingParam(pc, pc.getPage(), ev, true);
         } catch (NamingException e) {
             e.printStackTrace();
@@ -426,6 +406,8 @@ public abstract class Paas implements Event {
         String name = clazz.getCanonicalName();
         int hashCode = clazz.hashCode();
         boolean rebuild;
+        ArgsHandler[] argsHandlers;
+//        Class<?>[] parameterTypes;
 
         MethodParams mprms = cacheMethodParams.get(name);
         if (mprms == null || mprms.getHashCode() != hashCode) {
@@ -436,6 +418,7 @@ public abstract class Paas implements Event {
         }
         if (rebuild) {
             Method[] methods = clazz.getDeclaredMethods();
+            boolean hasMethod = false;
             for (Method m : methods) {
                 if (m.isAnnotationPresent(hook.class)) {
 //                    if(!isQualifyMethod(m)){
@@ -443,8 +426,8 @@ public abstract class Paas implements Event {
 //                    }
                     m.setAccessible(true);
                     Annotation[][] paramAnnotation = m.getParameterAnnotations();
-                    List<ArgHandler> argsHandlerList = new ArrayList(paramAnnotation.length);
-                    ArgHandler h;
+                    List<ArgsHandler> argsHandlerList = new ArrayList(paramAnnotation.length);
+                    ArgsHandler h;
                     Annotation a;
                     for (int i = 0, j = 0, sz = paramAnnotation.length; j < sz; i++, j++) {
                         Annotation[] as = paramAnnotation[j];
@@ -452,110 +435,153 @@ public abstract class Paas implements Event {
                             Class<?> atype = a.annotationType();
                             if (atype.isAssignableFrom(param.class)) {
                                 param p = (param) a;
-                                argsHandlerList.add(new ArgHandler(ArgEnum.PARAM, p.value()));
+                                final String key = p.value();
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req,
+                                                          HttpServletResponse resp,
+                                                          Event ev,
+                                                          boolean hasJson,
+                                                          JSONObject jsonPayload) {
+                                        return req.getParameter(key);
+                                    }
+                                };
+                                argsHandlerList.add(h);
                             } else if (atype.isAssignableFrom(attr.class)) {
                                 attr $attr = (attr) a;
-                                argsHandlerList.add(new ArgHandler(ArgEnum.ATTR, $attr.value()));
-                            } else if (atype.isAssignableFrom(json.class)) {
-                                json $json = (json) a;
-                                String key = $json.value();
-                                if (key.length() == 0) {
-                                    h = new ArgHandler(ArgEnum.JSON);
-                                } else {
-                                    h = new ArgHandler(ArgEnum.JSONKEY, key);
-                                }
+                                final String key = $attr.value();
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) {
+                                        return req.getAttribute(key);
+                                    }
+                                };
                                 argsHandlerList.add(h);
-                            } else if (atype.isAssignableFrom(page.class)) {
-                                argsHandlerList.add(new ArgHandler(ArgEnum.PAGECTX));
-                            } else if (atype.isAssignableFrom(request.class)) {
-                                argsHandlerList.add(new ArgHandler(ArgEnum.REQUEST));
-                            } else if (atype.isAssignableFrom(response.class)) {
-                                argsHandlerList.add(new ArgHandler(ArgEnum.RESPONSE));
+                            } else if (atype.isAssignableFrom(json.class)) {
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) {
+                                        return jsonPayload;
+                                    }
+                                };
+                                argsHandlerList.add(h);
+                            } else if (atype.isAssignableFrom(jsonKey.class)) {
+                                jsonKey $jsonKey = (jsonKey) a;
+                                final String key = $jsonKey.value();
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) {
+                                        return jsonPayload.get(key);
+                                    }
+                                };
+                                argsHandlerList.add(h);
                             } else if (atype.isAssignableFrom(event.class)) {
-                                argsHandlerList.add(new ArgHandler(ArgEnum.EVENT));
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) {
+                                        return ev;
+                                    }
+                                };
+                                argsHandlerList.add(h);
                             } else if (atype.isAssignableFrom(writer.class)) {
-                                argsHandlerList.add(new ArgHandler(ArgEnum.WRITER));
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) throws IOException {
+                                        return resp.getWriter();
+                                    }
+                                };
+                                argsHandlerList.add(h);
                             } else if (atype.isAssignableFrom(any.class)) {
                                 any $any = (any) a;
-                                String key = $any.value();
-                                argsHandlerList.add(new ArgHandler(ArgEnum.ANY, key));
+                                final String key = $any.value();
+                                h = new ArgsHandlerImpl() {
+                                    @Override
+                                    public Object getArgs(HttpServletRequest req, HttpServletResponse resp, Event ev,
+                                                          boolean hasJson, JSONObject jsonPayload) {
+                                        if (req.getAttribute(key) != null) {
+                                            return req.getAttribute(key);
+                                        } else if (hasJson && jsonPayload.get(key) != null) {
+                                            return jsonPayload.get(key);
+                                        } else {
+                                            return req.getParameter(key);
+                                        }
+                                    }
+                                };
+                                argsHandlerList.add(h);
                             }
                         }
                     }
 
                     mprms.setM(m);
-                    mprms.setArgsHandlers(argsHandlerList.toArray(new ArgHandler[0]));
+                    mprms.setArgsHandlers(argsHandlerList.toArray(new ArgsHandler[0]));
+                    hasMethod = true;
                     break;
                 }
             }
+
+            if (!hasMethod) {
+                return;
+            }
+
             // find the first param will do
             cacheMethodParams.put(name, mprms);
         }
+        argsHandlers = mprms.getArgsHandlers();
 
-        boolean hasError = false;
-        try {
-            if (!cacheMethodParams.containsKey(name)) {
+//        argsData = ev.getArgsData();
+        HttpServletRequest req = (HttpServletRequest) pc.getRequest();
+        HttpServletResponse resp = (HttpServletResponse) pc.getResponse();
+        Object[] args;
+        JSONObject jsonPayload = ev.getJsonPayload();
+        boolean hasJson = ev.hasJson();
+        if (req.getParameterMap().size() > 0 || req.getAttributeNames().hasMoreElements()) {
+            args = new Object[argsHandlers.length];
+            try {
+                for (int i = 0, sz = args.length; i < sz; i++) {
+                    args[i] = argsHandlers[i].getArgs(req, resp, ev, hasJson, jsonPayload);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
                 return;
             }
-            ArgHandler[] argsHandlers = mprms.getArgsHandlers();
-            HttpServletRequest req = (HttpServletRequest) pc.getRequest();
-            HttpServletResponse resp = (HttpServletResponse) pc.getResponse();
-            Object[] args;
-            JSONObject jsonPayload = ev.getJsonPayload();
-            boolean hasJson = ev.hasJson();
-            if (req.getParameterMap().size() > 0 || req.getAttributeNames().hasMoreElements()) {
-                args = new Object[argsHandlers.length];
-                ArgHandler h;
-                String key;
-                try {
-                    for (int i = 0, sz = args.length; i < sz; i++) {
-                        h = argsHandlers[i];
-                        key = h.argKey;
-                        switch (h.argEnum) {
-                            case ATTR:
-                                args[i] = req.getAttribute(key);
-                                break;
-                            case EVENT:
-                                args[i] = ev;
-                                break;
-                            case JSON:
-                                args[i] = jsonPayload;
-                                break;
-                            case JSONKEY:
-                                args[i] = jsonPayload.get(key);
-                                break;
-                            case ANY:
-                                if (req.getAttribute(key) != null) {
-                                    args[i] = req.getAttribute(key);
-                                } else if (hasJson && jsonPayload.get(key) != null) {
-                                    args[i] = jsonPayload.get(key);
-                                } else {
-                                    args[i] = req.getParameter(key);
-                                }
-                                break;
-                            case PAGECTX:
-                                args[i] = pc;
-                                break;
-                            case PARAM:
-                                args[i] = req.getParameter(key);
-                                break;
-                            case REQUEST:
-                                args[i] = req;
-                                break;
-                            case RESPONSE:
-                                args[i] = resp;
-                                break;
-                            case WRITER:
-                                args[i] = resp.getWriter();
-                                break;
-                            default:
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;
-                }
 
+
+//            for (int i = 0, j = 0, sz = paramAnnotation.length; j < sz; i++, j++) {
+//                Annotation[] as = paramAnnotation[j];
+//                if (as.length > 0 && (a = as[0]) != null) {
+//                    Class<?> atype = a.annotationType();
+//                    if (atype.isAssignableFrom(param.class)) {
+//                        param p = (param) a;
+//                        args[i] = req.getParameter(p.value());
+//                    } else if (atype.isAssignableFrom(attr.class)) {
+//                        attr attr = (com.github.taymindis.paas.annotation.attr) a;
+//                        args[i] = req.getAttribute(attr.value());
+//                    } else if (atype.isAssignableFrom(json.class)) {
+//                        if (hasJson) {
+//                            args[i] = jsonPayload;
+//                        }
+//                    } else if (atype.isAssignableFrom(event.class)) {
+//                        args[i] = ev;
+//                    } else if (atype.isAssignableFrom(any.class)) {
+//                        any any = (any) a;
+//                        String key = any.value();
+//                        if (req.getAttribute(key) != null) {
+//                            args[i] = req.getAttribute(key);
+//                        } else if (hasJson && jsonPayload.get(key) != null) {
+//                            args[i] = jsonPayload.get(key);
+//                        } else {
+//                            args[i] = req.getParameter(key);
+//                        }
+//                    }
+//                }
+//            }
+
+                boolean hasError = false;
                 try {
                     Object o = mprms.getM().invoke(pageObj, args);
                     if (o != null) {
@@ -570,29 +596,28 @@ public abstract class Paas implements Event {
                 } catch (Exception e) {
                     hasError = true;
                     throw e;
-                }
-            }
-        } finally {
-            if (finalizing) {
-                if (ev instanceof EventTransaction) {
-                    EventTransaction evt = (EventTransaction) ev;
-                    try {
-                        if (hasError && evt.isRollbackOnError()) {
+                } finally {
+                    if (finalizing) {
+                        if (ev instanceof EventTransaction) {
+                            EventTransaction evt = (EventTransaction) ev;
                             try {
-                                evt.rollback();
-                            } catch (SQLException throwables) {
-                                throwables.printStackTrace();
+                                if (hasError) {
+                                    try {
+                                        evt.rollback();
+                                    } catch (SQLException throwables) {
+                                        throwables.printStackTrace();
+                                    }
+                                    evt.release(false);
+                                } else {
+                                    evt.release(true);
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
                             }
-                            evt.release(false);
-                        } else {
-                            evt.release(true);
                         }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
                     }
                 }
             }
         }
-    }
 
-}
+    }

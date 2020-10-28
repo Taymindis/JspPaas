@@ -63,7 +63,7 @@ public abstract class Paas implements Event {
 //        return newTransactionEvent(pc, jndiResource, null);
 //    }
 
-    private static JtaEvent newTransactionEvent(PageContext pc, String jndiResource, JtaEventLogger log) throws NamingException {
+    private static JtaEvent newJtaEvent(PageContext pc, String jndiResource, JtaEventLogger log) throws NamingException {
         JtaEvent ev = new JtaEventImpl(pc, jndiResource, log);
         pc.setAttribute("$_ev_ctx", ev, PageContext.REQUEST_SCOPE);
 //        marshallingArgs(pc.getPage(), ev);
@@ -149,7 +149,7 @@ public abstract class Paas implements Event {
 
     public static void serveJta(final PageContext pc, final String jndiResource, final JSONObject jsonPayload, final JtaEventLogger logger, final boolean rollbackOnError) {
         try {
-            JtaEvent ev = newTransactionEvent(pc, jndiResource, logger);
+            JtaEvent ev = newJtaEvent(pc, jndiResource, logger);
             if (jsonPayload != null) {
                 ev.setJsonBody(jsonPayload);
             }

@@ -475,6 +475,8 @@ public abstract class Paas implements Event {
                                 argsHandlerList.add(new ArgHandler(ArgEnum.EVENT));
                             } else if (atype.isAssignableFrom(writer.class)) {
                                 argsHandlerList.add(new ArgHandler(ArgEnum.WRITER));
+                            } else if (atype.isAssignableFrom(out.class)) {
+                                argsHandlerList.add(new ArgHandler(ArgEnum.OUT));
                             } else if (atype.isAssignableFrom(any.class)) {
                                 any $any = (any) a;
                                 String key = $any.value();
@@ -547,6 +549,9 @@ public abstract class Paas implements Event {
                                 break;
                             case WRITER:
                                 args[i] = resp.getWriter();
+                                break;
+                            case OUT:
+                                args[i] = pc.getOut();
                                 break;
                             default:
                         }

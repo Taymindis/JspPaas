@@ -10,5 +10,6 @@ public enum ArgEnum {
     PARAM,
     REQUEST,
     RESPONSE,
-    WRITER
+    WRITER,
+    OUT
 }

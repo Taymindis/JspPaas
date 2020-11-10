@@ -154,6 +154,7 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                    <proc>none</proc>
                 </configuration>
                 <executions>
                     <execution>
@@ -165,7 +166,7 @@
                         <configuration>
                             <proc>only</proc>
                             <annotationProcessors>
-                                <annotationProcessor>com.github.taymindis.paas.MethodHookProcessor</annotationProcessor>
+                                <annotationProcessor>com.github.taymindis.paas.JspPaasProcessor</annotationProcessor>
                             </annotationProcessors>
                         </configuration>
                     </execution>

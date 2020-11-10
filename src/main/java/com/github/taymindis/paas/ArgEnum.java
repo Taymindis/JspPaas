@@ -11,6 +11,5 @@ public enum ArgEnum {
     REQUEST,
     RESPONSE,
     WRITER,
-    OUT,
-    NO_ANNOTATE
+    OUT
 }

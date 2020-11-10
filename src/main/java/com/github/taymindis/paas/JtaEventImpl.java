@@ -199,7 +199,6 @@ public class JtaEventImpl extends Paas implements JtaEvent {
             if (stmt != null) {
                 stmt.close();
             }
-
 //            this.commit();
         }
     }
@@ -255,7 +254,7 @@ public class JtaEventImpl extends Paas implements JtaEvent {
         this.rollbackOnError = rollbackOnError;
     }
 
-    private Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
         if (this.connection == null) {
             this.connection = _ds.getConnection();
 //            this.connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);

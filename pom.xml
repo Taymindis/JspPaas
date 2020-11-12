@@ -6,7 +6,7 @@
 
     <groupId>com.github.taymindis</groupId>
     <artifactId>jsp-paas</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.5</version>
     <name>jsp-paas</name>
     <description>
         Page as a service for JSP to standardize the function by jsp page, guarantee zero downtime

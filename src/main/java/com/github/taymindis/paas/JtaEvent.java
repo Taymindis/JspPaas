@@ -1,5 +1,6 @@
 package com.github.taymindis.paas;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -29,6 +30,8 @@ public interface JtaEvent extends Event {
      * @throws SQLException SQLException
      */
     int executeWithKey(String sql, Object... sqlParams) throws SQLException;
+
+    Connection getConnection() throws SQLException;
 
     void rollback() throws SQLException;
 

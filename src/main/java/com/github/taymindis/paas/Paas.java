@@ -100,7 +100,7 @@ public abstract class Paas implements Event {
         if (jsonPayload != null) {
             ev.setJsonBody(jsonPayload);
         }
-        marshallingParam(pc, pc.getPage(), ev, true);
+        marshallingParam(pc, pc.getPage(), ev, true, serve.class);
     }
 
     public static void serveJta(final PageContext pc, final String jndiResource) {
@@ -154,7 +154,7 @@ public abstract class Paas implements Event {
                 ev.setJsonBody(jsonPayload);
             }
             ev.setRollbackOnError(rollbackOnError);
-            marshallingParam(pc, pc.getPage(), ev, true);
+            marshallingParam(pc, pc.getPage(), ev, true, serve.class);
         } catch (NamingException e) {
             e.printStackTrace();
         }
@@ -183,7 +183,7 @@ public abstract class Paas implements Event {
 
     public static void hook(PageContext pc) {
         Event ev = (Event) pc.getAttribute("$_ev_ctx", PageContext.REQUEST_SCOPE);
-        marshallingParam(pc, pc.getPage(), /*ev.get_prevPage(),*/ ev, false);
+        marshallingParam(pc, pc.getPage(), /*ev.get_prevPage(),*/ ev, false, hook.class);
     }
 
     public static Object directResult(String resourcePath, Event $ev) throws Exception {
@@ -421,7 +421,8 @@ public abstract class Paas implements Event {
 //        return s.hasNext() ? s.next() : "";
 //    }
 
-    private static void marshallingParam(PageContext pc, Object pageObj,/* Object _prevObj, */Event ev, boolean finalizing) {
+    private static void marshallingParam(PageContext pc, Object pageObj,/* Object _prevObj, */Event ev, boolean finalizing,
+                                         Class<? extends Annotation> hookOrServe ) {
         Class<?> clazz = pageObj.getClass();
         String name = clazz.getCanonicalName();
         int hashCode = clazz.hashCode();
@@ -437,7 +438,7 @@ public abstract class Paas implements Event {
         if (rebuild) {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method m : methods) {
-                if (m.isAnnotationPresent(hook.class)) {
+                if (m.isAnnotationPresent(hookOrServe)) {
 //                    if(!isQualifyMethod(m)){
 //                      // TODO if not qualify, throw e
 //                    }

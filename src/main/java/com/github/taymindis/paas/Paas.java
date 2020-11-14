@@ -4,6 +4,7 @@ import com.github.taymindis.paas.annotation.*;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -38,6 +40,7 @@ public abstract class Paas implements Event {
 
     //    private static final Map<String, MethodParams> cacheArgFields = new HashMap<>();
     private static final Map<String, MethodParams> cacheMethodParams = new HashMap<>();
+    private static Map<String, Object> paasConf = null;
     private boolean hasJson;
 
     public Paas(PageContext pc) {
@@ -160,7 +163,8 @@ public abstract class Paas implements Event {
         }
     }
 
-    public static void init(String $resourcePath, String $suffix, String $splitter, int nWorkerThread) {
+    public static void init(String $resourcePath, String $suffix, String $splitter, int nWorkerThread
+            , String ymlConfigurationFile) {
         if (null == bgExecutor && nWorkerThread > 0) {
             bgExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nWorkerThread);
         }
@@ -173,6 +177,33 @@ public abstract class Paas implements Event {
         if (null != $splitter) {
             Paas.splitter = $splitter;
         }
+
+        if(ymlConfigurationFile == null) {
+            ymlConfigurationFile = "paas.yml";
+        }
+        InputStream inputStream = null;
+        try {
+            Yaml yaml = new Yaml();
+            inputStream  = Paas.class
+                    .getClassLoader()
+                    .getResourceAsStream(ymlConfigurationFile);
+            paasConf = yaml.load(inputStream);
+        } catch (Exception e) {
+            paasConf = new HashMap<>();
+            e.printStackTrace();
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void init(String $resourcePath, String $suffix, String $splitter, int nWorkerThread) {
+       init($resourcePath, $suffix, $splitter, nWorkerThread, null);
     }
 
     @Deprecated
@@ -190,6 +221,25 @@ public abstract class Paas implements Event {
         return $ev.dispatch(resourcePath).getResult();
     }
 
+    public static <E> E getPath(Map<String, Object> values, String path) {
+        if(path.length() == 0) {
+            return null;
+        }
+        String[] keys = path.split("(?<![\\\\])\\.");
+
+        Object p = values.get(keys[0].replaceAll("\\\\.", "."));
+        for(int i=1,sz=keys.length;i<sz;i++) {
+            if(p == null) {
+                return null;
+            }
+            if(p instanceof List) {
+                p = ((List)p).get(Integer.parseInt(keys[i]));
+            } else {
+                p = ((Map)p).get(keys[i]);
+            }
+        }
+        return (E) p;
+    }
 
     //    public static Object directResult(String resourcePath, Event $ev,
 //                                      Map<Byte, Object> params) throws Exception {
@@ -457,6 +507,9 @@ public abstract class Paas implements Event {
                             } else if (atype.isAssignableFrom(attr.class)) {
                                 attr $attr = (attr) a;
                                 argsHandlerList.add(new ArgHandler(ArgEnum.ATTR, $attr.value()));
+                            } else if (atype.isAssignableFrom(conf.class)) {
+                                conf $conf = (conf) a;
+                                argsHandlerList.add(new ArgHandler(ArgEnum.CONF, $conf.value()));
                             } else if (atype.isAssignableFrom(json.class)) {
                                 json $json = (json) a;
                                 String key = $json.value();
@@ -553,6 +606,9 @@ public abstract class Paas implements Event {
                                 break;
                             case OUT:
                                 args[i] = pc.getOut();
+                                break;
+                            case CONF:
+                                args[i] = getPath(paasConf, key);
                                 break;
                             default:
                         }

@@ -180,7 +180,13 @@ public abstract class Paas implements Event {
 
         if(ymlConfigurationFile == null) {
             ymlConfigurationFile = "paas.yml";
+            if(Paas.class.getResource(ymlConfigurationFile) == null) {
+                /** If default configuration path not exist, just create a empty paasConf **/
+                paasConf = new HashMap<>();
+                return;
+            }
         }
+
         InputStream inputStream = null;
         try {
             Yaml yaml = new Yaml();

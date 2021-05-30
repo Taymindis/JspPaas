@@ -426,8 +426,12 @@ public class JtaEventImpl extends Paas implements JtaEvent {
         this.result = null;
         this.logger = logger;
 
+        if(jndiResource == null) {
+            throw new NullPointerException("JNDIResource link is null value");
+        }
+
         synchronized (dsMaps) {
-            if (dsMaps.contains(jndiResource)) {
+            if (dsMaps.containsKey(jndiResource)) {
                 _ds = dsMaps.get(jndiResource);
             } else {
 //            DataSource ds = (DataSource) ctx.lookup("java:/comp/env/jdbc/DBLink");
